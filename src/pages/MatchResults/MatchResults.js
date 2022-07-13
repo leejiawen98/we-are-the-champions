@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { getAllMatchResults, insertMatchResults } from '../../api/MatchResultsAPI';
+import { insertTeamScores } from '../../api/RankingAPI';
 import './MatchResults.css'
 
 export default function MatchResults() {
 
     let navigate = useNavigate();
-
-
+    const { state } = useLocation();
+ 
+    let error = false;
+    
     useEffect(() => {
         getAllResults();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -20,10 +23,64 @@ export default function MatchResults() {
     }
 
     const submit = () => {
-        let matchResultsList = convertInputToMatchResults(matchResults.trim());
-        console.log(matchResultsList)
-        save(matchResultsList);
+        if (matchResults !== '') {
+            let matchResultsList = convertInputToMatchResults(matchResults.trim());
+            if (!error) {
+                save(matchResultsList);
+            } else {
+                error = false;
+            }
+        } else {
+            alert("Please input team information");
+        }
+    }
 
+    function handleTeamScores(matchResultsList) {
+        let teamScoreMap = state.teamScoreMap;
+        matchResultsList.forEach(x => {
+            let score1 = teamScoreMap.get(x.team1);
+            score1.total_goals += x.team1_goals;
+
+            let score2 = teamScoreMap.get(x.team2);
+            score2.total_goals += x.team2_goals;
+
+            if (x.team1_goals > x.team2_goals) { // team 1 wins, team 2 lose
+                score1.match_points += 3;
+                score1.alt_match_points += 5;
+            
+                score2.alt_match_points -= 1;
+            } else if (x.team1_goals === x.team2_goals) { // draw
+                score1.match_points += 1;
+                score1.alt_match_points += 3;
+                
+                score2.match_points += 1;
+                score2.alt_match_points += 3;
+            } else if (x.team1_goals < x.team2_goals) { // team 1 lose, team 2 wins
+                score1.alt_match_points -= 1;
+                
+                score2.match_points += 3;
+                score2.alt_match_points += 5;
+            }
+
+            teamScoreMap.set(x.team1, score1);
+            teamScoreMap.set(x.team2, score2);
+        })
+        return teamScoreMap;
+      }
+
+      async function saveTeamScores(teamScores) {
+        try {
+            const response = await insertTeamScores(teamScores);
+            if (response) {
+                alert('ok');
+            }
+        } catch (error) {
+            let msg = "";
+            if (error ===  400) {
+            msg = "Bad Request. Please check input format"
+            }
+            alert('Error: ' + msg);
+        }
     }
 
     async function save(matchResults) {
@@ -31,6 +88,13 @@ export default function MatchResults() {
             const response = await insertMatchResults(matchResults);
             if (response) {
                 alert('ok');
+                let teamScoreMap = handleTeamScores(matchResults);
+                saveTeamScores(Array.from(teamScoreMap.values()));
+                navigate('/ranking', {
+                    state: {
+                        teamScoreMap: teamScoreMap
+                    }
+                });
             }
         } catch (error) {
             let msg = "";
@@ -67,15 +131,23 @@ export default function MatchResults() {
           team2_goals: '',
         }
         inputArr.forEach(x => {
-          const xArr = x.split(" ");
-    
-          let newMatchResults = JSON.parse(JSON.stringify(matchResults)); // deep clone
-          newMatchResults.team1 = xArr[0];
-          newMatchResults.team2 = xArr[1];
-          newMatchResults.team1_goals = parseInt(xArr[2]);
-          newMatchResults.team2_goals = parseInt(xArr[3]);
-          inputObjArr.push(newMatchResults);
-        })
+            // exit loop if there exists error in input
+            if (error) {
+                return false;
+            }
+            const xArr = x.split(" ");
+            if (xArr.length === 4) {
+                let newMatchResults = JSON.parse(JSON.stringify(matchResults)); // deep clone
+                newMatchResults.team1 = xArr[0];
+                newMatchResults.team2 = xArr[1];
+                newMatchResults.team1_goals = parseInt(xArr[2]);
+                newMatchResults.team2_goals = parseInt(xArr[3]);
+                inputObjArr.push(newMatchResults);
+            } else {
+                alert("Please input in the correct format");
+                error = true;
+            }
+            })
         return inputObjArr;
     }
 
@@ -90,15 +162,20 @@ export default function MatchResults() {
     return (
         <div>
             <h1>We are the champions!</h1>
+            <Link to="/ranking">View current ranking</Link>
             <div className="form">
                 <label>Match Results:</label>
                 <textarea 
                 type="text" 
                 name="matchResults" 
                 onChange={handleMatchResults}
-                value={matchResults}/>
-
-                <button onClick={submit}>Next</button>      
+                value={matchResults}
+                placeholder="<Team A name> <Team B name> <Team A goals scored> <Team B goals scored>"
+                />
+                <div className="buttons">
+                    <Link to="/">Back</Link>
+                    <button onClick={submit}>Next</button>      
+                </div>
             </div>
         </div>
     )

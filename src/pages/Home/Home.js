@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import './Home.css';
 import { getAllTeamInformation, insertTeamInformation } from '../../api/TeamInformationAPI';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export default function Home() {
 
   let navigate = useNavigate();
+
+  let error = false;
 
   const [teamInformation, setTeamInformation] = useState('');
 
@@ -15,9 +17,40 @@ export default function Home() {
   }, []);
 
   const submit = async () => {
-    let teamList = convertInputToTeamInformation(teamInformation.trim());
-    save(teamList);
-    navigate('/matchResults');
+    if (teamInformation !== "") {
+      let teamList = convertInputToTeamInformation(teamInformation.trim());
+      if (!error) {
+        save(teamList);
+      } else {
+        error = false;
+      }
+    } else {
+      alert("Please input team information");
+    }
+  }
+
+  function handleTeamScores(teamList) {
+    let teamScore = {
+      match_points: 0,
+      total_goals: 0,
+      alt_match_points: 0,
+      registration_date: '',
+      team_name: '',
+      group_number: 0
+    }
+    let teamScoreMap = new Map();
+    teamList.forEach(x => {
+      let newTeamScore = JSON.parse(JSON.stringify(teamScore)); // deep clone
+      newTeamScore.team_name = x.team_name;
+      newTeamScore.group_number = x.group_number;
+      let reg_date_arr = x.registration_date.split("-");
+      let registration_date = new Date();
+      registration_date.setMonth(parseInt(reg_date_arr[1])-1);
+      registration_date.setDate(parseInt(reg_date_arr[2]));
+      newTeamScore.registration_date = registration_date;
+      teamScoreMap.set(x.team_name, newTeamScore);
+    })
+    return teamScoreMap;
   }
 
   async function save(team) {
@@ -25,6 +58,12 @@ export default function Home() {
       const response = await insertTeamInformation(team);
       if (response) {
         alert('ok');
+        let teamScoreMap = handleTeamScores(team);
+        navigate('/matchResults', {
+          state: {
+            teamScoreMap: teamScoreMap
+          }
+        });
       }
     } catch (error) {
       let msg = "";
@@ -64,17 +103,25 @@ export default function Home() {
       registration_date: ''
     }
     inputArr.forEach(x => {
+      // exit loop if there exists error in input
+      if (error) {
+        return false;
+      }
       const xArr = x.split(" ");
-
-      let newTeamInformation = JSON.parse(JSON.stringify(teamInformation)); // deep clone
-      newTeamInformation.team_name = xArr[0];
-      newTeamInformation.group_number = parseInt(xArr[2]);
-      let reg_date_arr = xArr[1].split("/");
-      let registration_date = new Date();
-      registration_date.setMonth(parseInt(reg_date_arr[1])-1);
-      registration_date.setDate(parseInt(reg_date_arr[0]));
-      newTeamInformation.registration_date = registration_date.getFullYear() + "-" + (registration_date.getMonth()+1) + "-" + registration_date.getDate();
-      inputObjArr.push(newTeamInformation);
+      if (xArr.length === 3) {
+        let newTeamInformation = JSON.parse(JSON.stringify(teamInformation)); // deep clone
+        newTeamInformation.team_name = xArr[0];
+        newTeamInformation.group_number = parseInt(xArr[2]);
+        let reg_date_arr = xArr[1].split("/");
+        let registration_date = new Date();
+        registration_date.setMonth(parseInt(reg_date_arr[1])-1);
+        registration_date.setDate(parseInt(reg_date_arr[0]));
+        newTeamInformation.registration_date = registration_date.getFullYear() + "-" + (registration_date.getMonth()+1) + "-" + registration_date.getDate();
+        inputObjArr.push(newTeamInformation);
+      } else {
+        alert("Please input in the correct format");
+        error = true;
+      }
     })
     return inputObjArr;
   }
@@ -91,13 +138,16 @@ export default function Home() {
   return (
     <div>
       <h1>We are the champions!</h1>
+      <Link to="/ranking">View current ranking</Link>
       <div className="form">
         <label>Team Information:</label>
         <textarea 
         type="text" 
         name="teamInformation" 
         onChange={handleTeamInformation}
-        value={teamInformation}/>
+        value={teamInformation}
+        placeholder="<Team A name> <Team A registration date in DD/MM> <Team A group number>"
+        />
 
         <button onClick={submit}>Next</button>      
       </div>

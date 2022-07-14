@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import './Home.css';
 import { getAllTeamInformation, insertTeamInformation } from '../../api/TeamInformationAPI';
 import { Link, useNavigate } from 'react-router-dom';
+import { Navbar } from 'reactstrap';
 
 export default function Home() {
 
@@ -57,7 +58,6 @@ export default function Home() {
     try {
       const response = await insertTeamInformation(team);
       if (response) {
-        alert('ok');
         let teamScoreMap = handleTeamScores(team);
         navigate('/matchResults', {
           state: {
@@ -137,19 +137,24 @@ export default function Home() {
 
   return (
     <div>
-      <h1>We are the champions!</h1>
-      <Link to="/ranking">View current ranking</Link>
-      <div className="form">
-        <label>Team Information:</label>
-        <textarea 
-        type="text" 
-        name="teamInformation" 
-        onChange={handleTeamInformation}
-        value={teamInformation}
-        placeholder="<Team A name> <Team A registration date in DD/MM> <Team A group number>"
-        />
-
-        <button onClick={submit}>Next</button>      
+      <Navbar color="light">
+        <h1>We Are the Champions!</h1>
+      </Navbar>
+      <div className="body-content">
+        <div className="form">
+          <Link to="/ranking" className="view-button"><h4>View current ranking</h4></Link>
+          <div className="form-title">
+            <h5>Team Information:</h5>
+          </div>
+          <textarea 
+          type="text" 
+          name="teamInformation" 
+          onChange={handleTeamInformation}
+          value={teamInformation}
+          placeholder="<Team A name> <Team A registration date in DD/MM> <Team A group number>"
+          />
+          <button className="next-button" onClick={submit}>Next</button>
+        </div>
       </div>
     </div>
   );

@@ -2,10 +2,25 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  height:500px;
 }
   
 .form textarea {
-  width: 500px;
-  height: 200px;
-  margin: 10px
+  flex:1;
+  height: 100%;
+  margin: 10px;
+}
+
+.form-title {
+  width:500px;
+  font-size: 20px;
+}
+
+.view-button {
+  margin:20px;
+  align-self: flex-end;
+}
+
+.next-button {
+  width:500px
 }

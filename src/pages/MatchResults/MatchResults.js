@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Navbar } from 'reactstrap';
 import { getAllMatchResults, insertMatchResults } from '../../api/MatchResultsAPI';
 import { insertTeamScores } from '../../api/RankingAPI';
-import './MatchResults.css'
+import './MatchResults.css';
+import '../Home/Home.css';
 
 export default function MatchResults() {
 
@@ -72,7 +74,7 @@ export default function MatchResults() {
         try {
             const response = await insertTeamScores(teamScores);
             if (response) {
-                alert('ok');
+                
             }
         } catch (error) {
             let msg = "";
@@ -87,7 +89,6 @@ export default function MatchResults() {
         try {
             const response = await insertMatchResults(matchResults);
             if (response) {
-                alert('ok');
                 let teamScoreMap = handleTeamScores(matchResults);
                 saveTeamScores(Array.from(teamScoreMap.values()));
                 navigate('/ranking', {
@@ -161,10 +162,17 @@ export default function MatchResults() {
 
     return (
         <div>
-            <h1>We are the champions!</h1>
-            <Link to="/ranking">View current ranking</Link>
+            <Navbar color="light">
+                <h1>We Are the Champions!</h1>
+            </Navbar>
+            
             <div className="form">
-                <label>Match Results:</label>
+                <Link to="/ranking" className="view-button">
+                    <h4>View current ranking</h4>
+                </Link>
+                <div className="form-title">
+                    <h5>Match Results:</h5>
+                </div>
                 <textarea 
                 type="text" 
                 name="matchResults" 
@@ -173,8 +181,8 @@ export default function MatchResults() {
                 placeholder="<Team A name> <Team B name> <Team A goals scored> <Team B goals scored>"
                 />
                 <div className="buttons">
-                    <Link to="/">Back</Link>
-                    <button onClick={submit}>Next</button>      
+                    <button className="next-button2" onClick={()=>navigate("/")}>Back</button>    
+                    <button className="next-button2" onClick={submit}>Next</button>      
                 </div>
             </div>
         </div>

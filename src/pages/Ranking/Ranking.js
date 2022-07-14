@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import "./Ranking.css"
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { clearAll, getAllTeamScores, getRanking } from '../../api/RankingAPI';
+import { clearAll, getAllTeamScores } from '../../api/RankingAPI';
 
 export default function Ranking() {
 
@@ -34,7 +34,6 @@ export default function Ranking() {
         try {
             const response = await clearAll();
             if (response) {
-                alert('ok');
                 navigate('/');
             }
         } catch (error) {
@@ -89,36 +88,38 @@ export default function Ranking() {
 
     const group1Ranking = group1Top4.map((team, index) => {
         return (
-            <p key={index}>{index+1}. {team.team_name}</p>
+            <li key={index}>{index+1}.  {team.team_name}</li>
         )
     });
 
     const group2Ranking = group2Top4.map((team, index) => {
         return (
-            <p key={index}>{index+1}. {team.team_name}</p>
+            <li key={index}>{index+1}.  {team.team_name}</li>
         )
     });
 
     return (
         <div>
             <h1>We are the champions!</h1>
-            <Link to="/">Edit Team Information</Link>
-            <br/>
-            <Link to="/matchResults">Edit Match Results</Link>
             <div className="ranking">
-                <label><b>Ranking</b></label>
+                <div className="navigation-links">
+                    <Link to="/"><h4>Edit Team Information</h4></Link>
+                    <br/>
+                    <Link to="/matchResults"><h4>Edit Match Results</h4></Link>
+                </div>
+                <h4><u>Ranking</u></h4>
 
                 <div className="ranking-body">
                     <div className="ranking-group">
-                        <label>Group 1:</label>
+                        <h5>Group 1:</h5>
                         {group1Ranking}
                     </div>
                     <div className="ranking-group">
-                        <label>Group 2:</label>
+                        <h5>Group 2:</h5>
                         {group2Ranking}
                     </div>
                 </div>
-                <button onClick={() => clearDB()}>Clear All</button>
+                <button onClick={() => clearDB()}>Reset</button>
             </div>
         </div>
     )

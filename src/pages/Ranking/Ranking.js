@@ -47,7 +47,7 @@ export default function Ranking() {
 
     async function computeRanking() {
         let teamScoreArr;
-        // team score can be retrieved from database or from params
+        // team score can be retrieved from database or from state (params, to reduce API calling)
         if (!state) {
             teamScoreArr = await getTeamScores();
         } else {
@@ -88,13 +88,39 @@ export default function Ranking() {
 
     const group1Ranking = group1Top4.map((team, index) => {
         return (
-            <li key={index}>{index+1}.  {team.team_name}</li>
+            <li key={index} className="ranking-card">
+                <div>
+                    {index+1}. <b>{team.team_name}</b>
+                </div>
+                <div className="ranking-scores">
+                    Total Match Points: {team.match_points}
+                    <br/>
+                    Total Goals Scored: {team.total_goals}
+                    <br/>
+                    Alternative Match Points: {team.alt_match_points}
+                    <br/>
+                    Registration Date: {new Date(team.registration_date).getDate()}/{new Date(team.registration_date).getMonth()+1} 
+                </div>
+            </li>
         )
     });
 
     const group2Ranking = group2Top4.map((team, index) => {
         return (
-            <li key={index}>{index+1}.  {team.team_name}</li>
+            <li key={index} className="ranking-card">
+                <div>
+                    {index+1}.  <b>{team.team_name}</b>
+                </div>
+                <div className="ranking-scores">
+                    Total Match Points: {team.match_points}
+                    <br/>
+                    Total Goals Scored: {team.total_goals}
+                    <br/>
+                    Alternative Match Points: {team.alt_match_points}
+                    <br/>
+                    Registration Date: {new Date(team.registration_date).getDate()}/{new Date(team.registration_date).getMonth()+1} 
+                </div>
+            </li>
         )
     });
 
@@ -104,7 +130,6 @@ export default function Ranking() {
             <div className="ranking">
                 <div className="navigation-links">
                     <Link to="/"><h4>Edit Team Information</h4></Link>
-                    <br/>
                     <Link to="/matchResults"><h4>Edit Match Results</h4></Link>
                 </div>
                 <h4><u>Ranking</u></h4>
